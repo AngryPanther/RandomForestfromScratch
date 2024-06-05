@@ -1,0 +1,18 @@
+type: edu
+custom_name: "Beep boop, is this even working?"
+files:
+  - name: Student.py
+    visible: true
+    learner_created: false
+  - name: test/__init__.py
+    visible: false
+    learner_created: false
+  - name: test/tests.py
+    visible: false
+    learner_created: false
+feedback_link: https://hyperskill.org/learn/step/29148#comment
+status: Solved
+feedback:
+  message: Congratulations!
+  time: "Tue, 04 Jun 2024 23:23:36 UTC"
+record: 5

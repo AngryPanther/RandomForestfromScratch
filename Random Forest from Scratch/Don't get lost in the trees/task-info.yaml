@@ -1,0 +1,17 @@
+type: edu
+files:
+  - name: Student.py
+    visible: true
+    learner_created: false
+  - name: test/__init__.py
+    visible: false
+    learner_created: false
+  - name: test/tests.py
+    visible: false
+    learner_created: false
+feedback_link: https://hyperskill.org/learn/step/29149#comment
+status: Failed
+feedback:
+  message: "Wrong answer in test #1"
+  time: "Wed, 05 Jun 2024 00:07:55 UTC"
+record: 6
