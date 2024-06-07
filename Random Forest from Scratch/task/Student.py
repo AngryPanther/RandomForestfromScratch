@@ -4,7 +4,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score
 from tqdm import tqdm
-import matplotlib.pyplot as plt
 
 np.random.seed(52)
 
@@ -38,13 +37,14 @@ if __name__ == '__main__':
     X_train, X_val, y_train, y_val = \
         train_test_split(X.values, y.values, stratify=y, train_size=0.8)
 
-    def create_bootstrap(X, y):
-        bootstrap_X = X[np.random.choice(len(X), size=(len(X)))]
-        bootstrap_y = y[np.random.choice(len(X), size=(len(y)))]
-        return bootstrap_X, bootstrap_y
+    # Create function for bootstrapping
+    def create_bootstrap(X_train, y_train):
+        mask = np.random.choice(len(X_train), len(y_train), replace=True)
+        return X_train[mask], y_train[mask]
 
+    # Create Random Forest class
     class RandomForestClassifier:
-        def __init__(self, n_trees=600, max_depth=np.iinfo(np.int64).max, min_error=1e-6):
+        def __init__(self, n_trees=10, max_depth=np.iinfo(np.int64).max, min_error=1e-6):
             self.n_trees = n_trees
             self.max_depth = max_depth
             self.min_error = min_error
@@ -52,32 +52,27 @@ if __name__ == '__main__':
             self.forest = []
             self.is_fit = False
 
-            self.clf = DecisionTreeClassifier(max_features='sqrt', max_depth=self.max_depth,
-                                         min_impurity_decrease=self.min_error)
-
+        # Bootstrap the training datasets and leveraging DecisionTreeClassifier to fit them into the model
         def fit(self, X_train, y_train):
             for _ in tqdm(range(self.n_trees)):
                 bootstrap_X, bootstrap_y = create_bootstrap(X_train, y_train)
-                self.clf.fit(bootstrap_X, bootstrap_y)
-                self.clf.fit(X_train, y_train)
-                self.forest.append(self.clf)
+                dtc = DecisionTreeClassifier(max_features='sqrt', max_depth=np.iinfo(np.int64).max,
+                                             min_impurity_decrease=1e-6)
+                dtc.fit(bootstrap_X, bootstrap_y)
+                self.forest.append(dtc)
             self.is_fit = True
+            return self
 
+        # Create a DataFrame for the forest and predict each element
         def predict(self, X_test):
             if not self.is_fit:
                 raise AttributeError('The forest is not fit yet! Consider calling .fit() method.')
-            prediction = self.clf.predict(X_test)
-            return prediction
+            prediction = pd.DataFrame([dtc.predict(X_test) for dtc in self.forest])
+            return prediction.mode(axis=0).values[0]
 
     result = []
-    for n_trees in range(1, 21):
-        attempt = RandomForestClassifier(n_trees=n_trees)
-        attempt.fit(X_train, y_train)
-        result.append(round(accuracy_score(y_val, attempt.predict(X_val)), 3))
-    print(result[:20])
-
-    plt.title("Random Forest Accuracy Score")
-    plt.xlabel("Number of trees")
-    plt.ylabel("Accuracy")
-    plt.plot(range(1, 21), result[:20])
-    plt.show()
+    for i in range(1, 21):
+        forest = RandomForestClassifier(n_trees=i).fit(X_train, y_train)
+        prediction = forest.predict(X_val)
+        result.append(round(accuracy_score(y_val, prediction), 3))
+    print(result)
